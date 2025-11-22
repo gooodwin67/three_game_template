@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+   <meta charset="utf-8">
+   <!-- <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1"> -->
+   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+   <meta name="mobile-web-app-capable" content="yes">
+   <title>Шаблон</title>
+
+   <base href="./" />
+   <link rel="icon" type="image/x-icon" href="favicon.ico">
+   <link rel="shortcut icon" href="favicon.ico" type="image/x-icon">
+   <link href="style.css" rel="stylesheet" />
+
+
+
+
+   <!-- <script type="module">
+      import { startGame } from './main.js';
+
+      (function () {
+         function renderInitError(message) {
+            var container = document.body || document.documentElement;
+            if (!container) return;
+
+            var overlay = document.getElementById('debug-error-overlay');
+            if (!overlay) {
+               overlay = document.createElement('div');
+               overlay.id = 'debug-error-overlay';
+               overlay.className = 'debug_error_overlay';
+               container.appendChild(overlay);
+            }
+
+            overlay.textContent = message;
+         }
+
+         window.showInitError = function (error) {
+            var message = 'Init error';
+            if (error) {
+               if (error.message) message += ': ' + error.message;
+               else message += ': ' + String(error);
+            }
+
+            if (document.readyState === 'loading') {
+               document.addEventListener(
+                  'DOMContentLoaded',
+                  function () {
+                     renderInitError(message);
+                  },
+                  { once: true }
+               );
+            } else {
+               renderInitError(message);
+            }
+         };
+
+         window.addEventListener('error', function (event) {
+            if (!event) return;
+
+            var parts = [];
+
+            if (event.message) parts.push(event.message);
+            if (event.filename) parts.push('at ' + event.filename + ':' + event.lineno + ':' + event.colno);
+
+            if (event.error && event.error.stack) {
+               parts.push(event.error.stack);
+            }
+
+            window.showInitError(parts.join('\n'));
+         });
+
+         window.addEventListener('unhandledrejection', function (event) {
+            if (!event) return;
+
+            var reason = event.reason || 'unhandledrejection';
+            if (reason && reason.stack) {
+               window.showInitError(reason.stack);
+            } else {
+               window.showInitError(String(reason));
+            }
+         });
+
+
+
+
+         // Инициализация SDK + старт игры
+         window.initSDK = function () {
+            if (typeof YaGames !== 'undefined') {
+               YaGames.init()
+                  .then(function (ysdkInstance) {
+                     window.ysdk = ysdkInstance;
+                     startGame(ysdkInstance);
+                  })
+                  .catch(function (error) {
+                     window.showInitError(error);
+                  });
+            } else {
+               window.showInitError('YaGames is not defined');
+            }
+         };
+
+         // Гарантированно вызываем initSDK, когда страница и sdk.js уже загрузились
+         if (document.readyState === 'complete') {
+            // страница уже загружена
+            window.initSDK();
+         } else {
+            window.addEventListener('load', function () {
+               window.initSDK();
+            });
+         }
+      })();
+   </script> -->
+   <!-- ОДИН раз подключаем SDK, без onload -->
+   <!-- <script src="/sdk.js"></script> -->
+   <!-- <script src='/main.js'></script> -->
+
+   <script type="module">
+      import { startGame } from './main.js';
+      startGame(null);
+   </script>
+
+
+</head>
+
+<body>
+
+
+   <div class="main_screen">
+      <div id="lang-toggle" class="lang-toggle noselect" role="button" tabindex="0" aria-label="Switch language" aria-pressed="false">
+         <img id="flag" class="noselect" src="images/ru.svg" alt="Русский флаг" draggable="false">
+      </div>
+      <h1 class="logo-duck" data-text="Шаблон" data-i18n="title">Шаблон</h1>
+
+      <div class='main_screen_btns_wrap'>
+         <div class='new_game_btn new_game_btn1 yellow_btn' draggable="false">
+            <span data-i18n="modes.champ.title">Кнопка 1</span>
+         </div>
+
+      </div>
+      <div class="scroll-progress"><span class="scroll-progress__bar"></span></div>
+   </div>
+
+
+
+   <div class="free_game_screen hidden_screen">
+      <div class='free_game_screen_wrap'>
+
+         <div class='arrow_back' draggable="false"></div>
+
+      </div>
+      <div class="scroll-progress"><span class="scroll-progress__bar"></span></div>
+   </div>
+
+
+
+   <div class="loader_screen">
+      <div class="duck__wrapper">
+         <div class="surface">
+            <div class='loader_line'></div>
+            <span data-i18n="loader.loading">Загрузка...</span>
+         </div>
+      </div>
+   </div>
+
+   <div class='huds'>
+      <div class="hud hud--outline hud--stacked">
+         5
+      </div>
+
+      <div class="menu_in_game">
+
+         <div class="sound_btn_wrap" draggable="false">
+            <div class="volume-icon sound_btn">
+               <input class="volume-icon__input volume_off" type="checkbox" checked>
+               <svg viewBox="0 0 108 96">
+                  <path d="M7 28h28L59 8v80L35 68H7a4 4 0 01-4-4V32a4 4 0 014-4z" />
+                  <path d="M79 62c4-4.667 6-9.333 6-14s-2-9.333-6-14L49 3" />
+                  <path d="M95 69c6.667-7.333 10-14.667 10-22s-3.333-14.667-10-22L75.5 6 49 33" />
+               </svg>
+            </div>
+         </div>
+
+         <div class="pause_btn_wrap" draggable="false">
+            <div id="nav-icon3" class=' pause_btn'>
+               <span></span>
+               <span></span>
+               <span></span>
+            </div>
+         </div>
+
+      </div>
+   </div>
+
+
+</body>
+
+</html>

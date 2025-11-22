@@ -1,0 +1,705 @@
+/* =========================================
+   1. FONTS
+   ========================================= */
+@font-face {
+    font-family: 'Nunito Sans';
+    font-style: normal;
+    font-weight: 400;
+    font-display: swap;
+    src: url('/fonts/nunito-sans-v18-cyrillic_latin-regular.woff2') format('woff2');
+}
+
+@font-face {
+    font-family: 'Nunito Sans';
+    font-style: normal;
+    font-weight: 800;
+    font-display: swap;
+    src: url('/fonts/nunito-sans-v18-cyrillic_latin-800.woff2') format('woff2');
+}
+
+@font-face {
+    font-family: 'blackberry';
+    font-style: normal;
+    font-weight: 400;
+    font-display: swap;
+    src: url('/fonts/blackberry.woff2') format('woff2');
+}
+
+/* =========================================
+   2. VARIABLES & GLOBAL RESET (Yandex Games Optimized)
+   ========================================= */
+:root {
+    --safe-top: env(safe-area-inset-top, 0px);
+    --safe-right: env(safe-area-inset-right, 0px);
+    --safe-bottom: env(safe-area-inset-bottom, 0px);
+    --safe-left: env(safe-area-inset-left, 0px);
+    --color-blue: #009AA9;
+    --color-blue-grad: linear-gradient(1deg, rgba(0, 154, 169, 1) 1%, rgba(122, 202, 214, 1) 100%);
+    --color-yellow-grad: linear-gradient(1deg, rgba(254, 144, 0, 1) 1%, rgba(247, 197, 131, 1) 100%);
+    --color-green-grad: linear-gradient(1deg, rgba(78, 175, 5, 1) 1%, rgba(149, 224, 128, 1) 100%);
+}
+
+/* Глобальное отключение выделения и тапов для мобилок */
+* {
+    -webkit-tap-highlight-color: transparent;
+    -webkit-touch-callout: none;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+    -webkit-user-drag: none;
+    touch-action: manipulation;
+    box-sizing: border-box;
+}
+
+/* Разрешаем взаимодействие только там, где нужно */
+.lang-toggle img,
+.scroll-progress__bar {
+    pointer-events: auto;
+}
+
+/* Защита от курсора на тач-устройствах */
+@media (hover: none) {
+    * {
+        cursor: default !important;
+    }
+}
+
+/* =========================================
+   3. CORE LAYOUT (Body & Canvas)
+   ========================================= */
+html,
+body {
+    width: 100%;
+    height: 100%;
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+    /* Критично для игр */
+    overscroll-behavior: none;
+    background: #1C1D21;
+    font-family: 'Nunito Sans', Tahoma, sans-serif;
+}
+
+body {
+    position: fixed;
+    /* Фикс "прыжков" на iOS */
+    inset: 0;
+}
+
+canvas {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    z-index: -1;
+    object-fit: cover;
+    outline: none;
+    touch-action: none !important;
+    /* Важно для управления в Three.js */
+}
+
+/* Утилита для скрытия экранов */
+.hidden_screen {
+    display: none !important;
+}
+
+/* =========================================
+   4. MAIN SCREEN & UI CONTAINERS
+   ========================================= */
+.main_screen {
+    position: fixed;
+    inset: 0;
+    width: 100%;
+    height: 100dvh;
+    /* dynamic viewport height */
+
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+
+    background: #000 url('/images/main.jpg') no-repeat;
+    background-size: cover;
+    background-position-y: 15%;
+    color: #fff;
+
+    overflow-x: hidden;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+
+    /* Скрытие нативного скроллбара */
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+}
+
+.main_screen::-webkit-scrollbar {
+    display: none;
+    width: 0;
+    height: 0;
+}
+
+/* Заголовок */
+.main_screen h1 {
+    font-family: 'blackberry', Tahoma, cursive;
+    font-size: clamp(2.5rem, 10vw + 2vh, 11.25rem);
+    line-height: 0.85;
+    text-align: center;
+    color: #f76951;
+    letter-spacing: -0.02em;
+    max-width: 95vw;
+    margin: max(0.5rem, var(--safe-top) * 0.5) auto clamp(1rem, 4vh, 3rem);
+
+    text-shadow:
+        0.04em 0.04em 0.02em rgba(255, 255, 255, 0.9),
+        -0.03em -0.03em 0.02em rgba(255, 255, 255, 0.9);
+    word-wrap: break-word;
+}
+
+/* =========================================
+   5. BUTTONS
+   ========================================= */
+.main_screen_btns_wrap {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 100%;
+}
+
+.new_game_btn {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    max-width: 370px;
+    height: 75px;
+    margin-bottom: 18px;
+    border: 2px solid #6f727d;
+    border-radius: 15px;
+    background: var(--color-blue);
+    font-size: 22px;
+    font-weight: 800;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    position: relative;
+}
+
+
+.new_game_btn:hover {
+    transform: translateY(-2px);
+}
+
+.new_game_btn:active {
+    transform: translateY(0px);
+    box-shadow: none;
+}
+
+/* Цветовые модификаторы */
+.blue_btn {
+    background: var(--color-blue-grad);
+    border: 1px solid #007d8c;
+    box-shadow: 0 4px 0 #007d8c;
+}
+
+.yellow_btn {
+    background: var(--color-yellow-grad);
+    border: 1px solid #d96a02;
+    box-shadow: 0 4px 0 #d96a02;
+}
+
+.green_btn {
+    background: var(--color-green-grad);
+    border: 1px solid #3d8903;
+    box-shadow: 0 4px 0 #3d8903;
+}
+
+/* Стрелка назад (Pure CSS) */
+.arrow_back {
+    position: absolute;
+    left: -19px;
+    top: 21px;
+    width: 5px;
+    height: 5px;
+    border: 8px solid white;
+    border-color: white white transparent transparent;
+    transform: rotate(-135deg);
+}
+
+.arrow_back:before,
+.arrow_back:after {
+    content: '';
+    display: block;
+    position: absolute;
+    width: 0;
+    height: 0;
+    border: 5px solid;
+}
+
+.arrow_back:before {
+    border-color: white transparent transparent white;
+    top: -1px;
+    right: 0;
+    transform: rotate(45deg);
+    transform-origin: top right;
+}
+
+.arrow_back:after {
+    border-color: transparent white white transparent;
+    top: 0;
+    right: -1px;
+    transform: rotate(-45deg);
+    transform-origin: top right;
+}
+
+/* =========================================
+   6. HUD & GAME UI
+   ========================================= */
+.huds {
+    display: flex;
+    flex-direction: row-reverse;
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    z-index: 10;
+}
+
+.huds {
+    position: fixed;
+    top: max(20px, calc(var(--safe-top) + 10px));
+    right: max(20px, calc(var(--safe-right) + 10px));
+    z-index: 10;
+}
+
+.hud {
+    margin-left: 5px;
+    z-index: 10;
+    pointer-events: none;
+}
+
+.hud--outline {
+    padding: 3px 10px 6px;
+    border-radius: 10px;
+    border: 1px solid rgba(255, 255, 255, .6);
+    background: rgba(0, 0, 0, .12);
+    backdrop-filter: blur(4px);
+}
+
+.menu_in_game {
+    display: flex;
+    align-items: flex-start;
+    align-self: flex-start;
+    padding: 5px;
+    border-radius: 10px;
+    border: 1px solid rgba(255, 255, 255, 0.4);
+}
+
+.pause_btn_wrap,
+.sound_btn_wrap {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 5px 10px;
+    border-radius: 6px;
+    margin: 5px;
+    cursor: pointer;
+    pointer-events: auto;
+}
+
+.pause_btn_wrap {
+    height: 100%;
+    /* Фикс высоты */
+    background: var(--color-green-grad);
+    border: 1px solid #3d8903;
+    box-shadow: 0 4px 0 #3d8903;
+}
+
+.sound_btn_wrap {
+    background: var(--color-blue-grad);
+    border: 1px solid #007d8c;
+    box-shadow: 0 4px 0 #007d8c;
+}
+
+/* Гамбургер меню */
+#nav-icon3 {
+    width: 30px;
+    height: 30px;
+    position: relative;
+    transform: rotate(0deg);
+    transition: .5s ease-in-out;
+    cursor: pointer;
+}
+
+#nav-icon3 span {
+    display: block;
+    position: absolute;
+    height: 5px;
+    width: 100%;
+    background: #ffffff;
+    border-radius: 9px;
+    opacity: 1;
+    left: 0;
+    transform: rotate(0deg);
+    transition: .25s ease-in-out;
+}
+
+#nav-icon3 span:nth-child(1) {
+    top: 3px;
+}
+
+#nav-icon3 span:nth-child(2) {
+    top: 13px;
+}
+
+#nav-icon3 span:nth-child(3) {
+    top: 23px;
+}
+
+#nav-icon3.open span:nth-child(1) {
+    top: 18px;
+    width: 0%;
+    left: 50%;
+}
+
+#nav-icon3.open span:nth-child(2) {
+    transform: rotate(45deg);
+}
+
+#nav-icon3.open span:nth-child(3) {
+    transform: rotate(-45deg);
+}
+
+#nav-icon3.open span:nth-child(4) {
+    top: 18px;
+    width: 0%;
+    left: 50%;
+}
+
+/* Иконка звука (SVG animation) */
+.volume-icon {
+    position: relative;
+    width: 30px;
+    height: 30px;
+}
+
+.volume-icon__input {
+    display: none;
+}
+
+.volume-icon__input+svg {
+    display: block;
+    fill: none;
+    stroke: #ffffff;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    stroke-width: 9px;
+    width: 100%;
+    height: 100%;
+}
+
+.volume-icon__input+svg path {
+    animation: var(--name) 0.5s ease forwards;
+}
+
+/* Логика анимации звука */
+.volume-icon__input+svg path:nth-child(1) {
+    --name: shape-r;
+}
+
+.volume-icon__input+svg path:nth-child(2) {
+    --name: small-r;
+    stroke-dashoffset: 1px;
+}
+
+.volume-icon__input+svg path:nth-child(3) {
+    --name: large-r;
+    stroke-dashoffset: 1px;
+}
+
+.volume-icon__input.volume_off+svg path:nth-child(1) {
+    --name: shape;
+}
+
+.volume-icon__input.volume_off+svg path:nth-child(2) {
+    --name: small;
+}
+
+.volume-icon__input.volume_off+svg path:nth-child(3) {
+    --name: large;
+}
+
+/* =========================================
+   7. LOADERS & SCROLLBARS
+   ========================================= */
+/* Кастомный скроллбар (визуальный) */
+.scroll-progress {
+    position: fixed;
+    top: 8px;
+    right: 3px;
+    bottom: 8px;
+    width: 4px;
+    border-radius: 4px;
+    background: rgba(255, 255, 255, .18);
+    pointer-events: none;
+    z-index: 1000;
+    opacity: 0;
+    transition: opacity .25s ease;
+}
+
+.scroll-progress.visible {
+    opacity: 1;
+}
+
+.scroll-progress__bar {
+    position: absolute;
+    left: 0;
+    width: 100%;
+    border-radius: 4px;
+    background: rgba(255, 255, 255, .75);
+    cursor: grab;
+    touch-action: none;
+}
+
+.scroll-progress__bar:active {
+    cursor: grabbing;
+}
+
+/* Loader Screen */
+.loader_screen .surface {
+    position: absolute;
+    bottom: -2.4rem;
+    left: 55%;
+    transform: translateX(-50%);
+    background-color: white;
+    width: 8rem;
+    height: 0.7rem;
+    border-radius: 1rem;
+    animation: surface-animation 0.5s linear infinite;
+}
+
+.loader_screen .surface>.loader_line {
+    position: absolute;
+    height: 100%;
+    width: 0%;
+    background: linear-gradient(90deg, #4dffa3, #00c44b);
+    border-radius: 999px;
+    box-shadow: 0 0 10px rgba(0, 255, 180, 0.8);
+    transition: width 0.8s ease-in-out;
+}
+
+.loader_screen .surface span {
+    font-size: 26px;
+    padding-top: 14px;
+    position: absolute;
+    color: #fff;
+    font-weight: bold;
+}
+
+/* Language Toggle */
+.lang-toggle {
+    position: fixed;
+    bottom: 20px;
+    left: 20px;
+    width: 70px;
+    height: 38px;
+    background-color: hsla(0, 0%, 100%, .25);
+    border-radius: 20px;
+    padding: 4px;
+    cursor: pointer;
+    z-index: 1001;
+}
+
+.lang-toggle img {
+    position: absolute;
+    top: 4px;
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    object-fit: cover;
+    transition: all .2s ease-in-out;
+}
+
+.lang-toggle img.ru {
+    left: 4px;
+}
+
+.lang-toggle img.us {
+    left: 34px;
+    transform: rotate(360deg);
+}
+
+/* Debug Overlay */
+.debug_error_overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 10000;
+    background: rgba(0, 0, 0, 0.8);
+    color: #ff8080;
+    font-family: monospace;
+    font-size: 14px;
+    padding: 20px;
+    white-space: pre-wrap;
+    overflow: auto;
+    pointer-events: auto;
+}
+
+/* =========================================
+   8. ANIMATIONS (Keyframes)
+   ========================================= */
+@keyframes small {
+
+    0%,
+    30% {
+        stroke-dasharray: 0 0 30px 64px;
+    }
+
+    40% {
+        stroke-dashoffset: 16px;
+    }
+
+    80%,
+    100% {
+        stroke-dashoffset: 1px;
+    }
+
+    70% {
+        stroke-dasharray: 0 43px 30px 64px;
+    }
+
+    100% {
+        stroke-dasharray: 0 39px 30px 64px;
+    }
+}
+
+@keyframes small-r {
+    0% {
+        stroke-dasharray: 0 39px 30px 64px;
+        stroke-dashoffset: 1px;
+    }
+
+    70% {
+        stroke-dashoffset: 16px;
+    }
+
+    70%,
+    100% {
+        stroke-dasharray: 0 0 30px 64px;
+    }
+}
+
+@keyframes large {
+
+    0%,
+    30% {
+        stroke-dasharray: 0 0 50px 84px;
+    }
+
+    40% {
+        stroke-dashoffset: 16px;
+    }
+
+    80%,
+    100% {
+        stroke-dashoffset: 1px;
+    }
+
+    70% {
+        stroke-dasharray: 0 82px 32px 84px;
+    }
+
+    100% {
+        stroke-dasharray: 0 78px 32px 84px;
+    }
+}
+
+@keyframes large-r {
+    0% {
+        stroke-dasharray: 0 78px 32px 84px;
+        stroke-dashoffset: 1px;
+    }
+
+    70% {
+        stroke-dashoffset: 16px;
+    }
+
+    70%,
+    100% {
+        stroke-dasharray: 0 0 50px 84px;
+    }
+}
+
+@keyframes shape {
+    0% {
+        stroke-dasharray: 60px 0 184px;
+        stroke-dashoffset: 0;
+    }
+
+    70% {
+        stroke-dasharray: 63px 51px 184px;
+        stroke-dashoffset: 21px;
+    }
+
+    100% {
+        stroke-dasharray: 59px 47px 184px;
+        stroke-dashoffset: 17px;
+    }
+}
+
+@keyframes shape-r {
+    0% {
+        stroke-dasharray: 59px 47px 184px;
+        stroke-dashoffset: 17px;
+    }
+
+    100% {
+        stroke-dasharray: 60px 0 184px;
+        stroke-dashoffset: 0;
+    }
+}
+
+/* Placeholder for loader animation since keyframes were missing in original but referenced */
+@keyframes surface-animation {
+    0% {
+        transform: translateX(-50%) rotate(0deg);
+    }
+
+    100% {
+        transform: translateX(-50%) rotate(0deg);
+    }
+}
+
+/* =========================================
+   9. MEDIA QUERIES
+   ========================================= */
+/* Small screens (Landscape or small phones) */
+@media (max-height: 600px) {
+    .main_screen {
+        justify-content: flex-start;
+        padding-top: 10px;
+    }
+
+    .main_screen h1 {
+        font-size: clamp(1.8rem, 8vw + 1vh, 3.5rem);
+    }
+}
+
+/* Tall screens */
+@media (min-height: 900px) {
+    .main_screen h1 {
+        margin-top: max(1rem, var(--safe-top) * 0.7);
+    }
+}
+
+/* iOS / Old Devices */
+@media screen and (max-device-width: 1024px) {
+    body {
+        text-size-adjust: none;
+    }
+
+    .lang-toggle {
+        bottom: 10px;
+        left: 10px;
+    }
+}
