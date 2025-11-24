@@ -1,12 +1,15 @@
 import { t } from './i18n.js';
 
 export class DataClass {
-  constructor() {
+  constructor(gameContext) {
+
+    this.events = gameContext.events;
 
 
     this.yandexPlayer = {
       id: 0,
       player: null,
+      isAuthorized: false,
     };
 
 
@@ -21,29 +24,24 @@ export class DataClass {
 
   async initYandexPlayer({ force = false } = {}) {
     try {
-      // 👇 при force переполучаем player, чтобы он был уже "авторизованный"
       if (!this.yandexPlayer.player || force) {
-        this.yandexPlayer.player = await ysdk.getPlayer();
+        // Предполагаем, что ysdk глобален или передан иначе. 
+        // В идеале ysdk тоже должен лежать в gameContext, но пока оставим как есть.
+        if (typeof ysdk !== 'undefined') {
+          this.yandexPlayer.player = await ysdk.getPlayer();
+        }
       }
-      this.yandexPlayer.isAuthorized = await this.yandexPlayer.player.isAuthorized();
+      if (this.yandexPlayer.player) {
+        this.yandexPlayer.isAuthorized = await this.yandexPlayer.player.isAuthorized();
+      }
     } catch (_) {
       this.yandexPlayer.isAuthorized = false;
     }
 
-    const autorizElement = document.querySelector('.autoriz');
-    if (autorizElement) {
-      // лог только когда реально авторизованы
-      if (this.yandexPlayer.isAuthorized) {
-        console.log('авторизовались');
-      }
-      // прячем баннер без перезагрузки
-      autorizElement.classList.toggle('hidden_screen', this.yandexPlayer.isAuthorized === true);
+    this.events.emit('player_auth_checked', this.yandexPlayer.isAuthorized);
 
-      // на случай грязных стилей/анимаций — дубль через aria/display (не обязательно, но полезно)
-      if (this.yandexPlayer.isAuthorized === true) {
-        autorizElement.setAttribute('aria-hidden', 'true');
-        autorizElement.style.display = 'none';
-      }
+    if (this.yandexPlayer.isAuthorized) {
+      console.log('DataClass: авторизовались');
     }
   }
 

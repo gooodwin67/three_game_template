@@ -100,15 +100,18 @@ canvas {
     /* Важно для управления в Three.js */
 }
 
-/* Утилита для скрытия экранов */
-.hidden_screen {
-    display: none !important;
-}
+
 
 /* =========================================
    4. MAIN SCREEN & UI CONTAINERS
    ========================================= */
-.main_screen {
+/* Активный экран */
+.screen.active {
+    opacity: 1;
+    visibility: visible;
+}
+
+.screen {
     position: fixed;
     inset: 0;
     width: 100%;
@@ -120,21 +123,25 @@ canvas {
     align-items: center;
     justify-content: center;
 
-    background: #000 url('/images/main.jpg') no-repeat;
-    background-size: cover;
-    background-position-y: 15%;
-    color: #fff;
+    background: rgba(0, 0, 0, 0.8);
+    /* Затемнение фона для меню */
+
 
     overflow-x: hidden;
     overflow-y: auto;
     -webkit-overflow-scrolling: touch;
+
+    /* Скрываем по умолчанию */
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.3s ease, visibility 0.3s;
 
     /* Скрытие нативного скроллбара */
     scrollbar-width: none;
     -ms-overflow-style: none;
 }
 
-.main_screen::-webkit-scrollbar {
+.screen::-webkit-scrollbar {
     display: none;
     width: 0;
     height: 0;
@@ -469,9 +476,8 @@ canvas {
 /* Loader Screen */
 .loader_screen .surface {
     position: absolute;
-    bottom: -2.4rem;
-    left: 55%;
-    transform: translateX(-50%);
+    left: 50%;
+    transform: translate(-50%, -50%);
     background-color: white;
     width: 8rem;
     height: 0.7rem;

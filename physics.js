@@ -4,7 +4,6 @@ export class PhysicsClass {
   constructor() {
 
     this.world = null;
-
     this.eventQueue = null;
     this.dynamicBodies = [];
 

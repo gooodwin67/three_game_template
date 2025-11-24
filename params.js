@@ -2,6 +2,8 @@ export class ParamsClass {
  constructor() {
   this.gameInit = false;
   this.isMobileDevice = this.detectDevice();
+
+  this.gameState = { menu: 0, play: 1, pause: 2 }
  }
 
 

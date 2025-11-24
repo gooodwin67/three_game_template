@@ -3,10 +3,18 @@ const messages = {
     ru: {
         ui: { langToggle: "EN" },
         title: "Шаблон",
+        btn1: "Кнопка 1",
+        settings: "Настройки",
+        back: "Назад",
+        start_game_btn: "Начать игру",
     },
     en: {
         ui: { langToggle: "RU" },
         title: "Template",
+        btn1: "btn1",
+        settings: "settings",
+        back: "back",
+        start_game_btn: "Start Game",
     }
 };
 

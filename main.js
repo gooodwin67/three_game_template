@@ -1,30 +1,32 @@
 import * as THREE from 'three';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import Stats from 'three/addons/libs/stats.module.js';
 
-import { makeCollisionMaskFromArrays, createSplashSystem, createRippleRing, yanNeed } from "./functions";
+import { yanNeed } from "./functions";
+
+import { EventEmitter } from './events.js';
 
 import { ParamsClass } from '/params';
 
 import { PhysicsClass } from "./physics";
 import { AudioClass } from "./audio";
 import { ControlClass } from './control';
-import { MenuClass } from './menu';
 import { DataClass } from './data';
 import { AssetsManager } from './assets-manager';
+import { ScreenManager } from './screen-manager';
 import { initI18n } from './i18n.js';
+import { GameClass } from './game';
+
 
 console.clear();
 
 
 
-let world;
+
 let clock = new THREE.Clock();
 let loaderLine = document.querySelector('.loader_line');
 
-let paramsClass = null;
-let physicsClass = null;
-let assetsManager = null;
-let audioClass = null;
+const gameContext = {};
 
 
 
@@ -32,9 +34,10 @@ let audioClass = null;
 const scene = new THREE.Scene();
 scene.background = new THREE.Color(0xc9e1f4);
 // scene.fog = new THREE.Fog(scene.background, 1, 50);
-
 const camera = new THREE.PerspectiveCamera(25, window.innerWidth / window.innerHeight, 0.1, 2000);
-camera.position.y = 2;
+camera.position.x = 0;
+camera.position.y = 0;
+camera.position.z = 5;
 
 // ★ фиксируем HFOV не от текущего окна, а от референсного aspect
 const DESIGN_ASPECT = 16 / 9; // выбери свою базу (можно 16/9)
@@ -93,20 +96,36 @@ onWindowResize();
 
 
 // let ysdk;
-// let controls = new OrbitControls(camera, renderer.domElement);
+let controls = new OrbitControls(camera, renderer.domElement);
 
 
 
+
+
+async function startMatch() {
+  gameContext.ui.hideAll()
+  gameContext.gameClass.loadMesh();
+}
 
 
 /* =========================================
    INIT CLASSES
 ========================================= */
 async function initClases() {
-  paramsClass = new ParamsClass();
-  assetsManager = new AssetsManager();
-  physicsClass = new PhysicsClass();
-  audioClass = new AudioClass();
+  gameContext.scene = scene;
+  gameContext.camera = camera;
+  gameContext.renderer = renderer;
+
+  gameContext.events = new EventEmitter();
+
+  gameContext.ui = new ScreenManager(gameContext);
+  gameContext.paramsClass = new ParamsClass(gameContext);
+  gameContext.assetsManager = new AssetsManager(gameContext);
+  gameContext.physicsClass = new PhysicsClass(gameContext);
+  gameContext.audioClass = new AudioClass(gameContext);
+  gameContext.dataClass = new DataClass(gameContext);
+  gameContext.controlClass = new ControlClass(gameContext);
+  gameContext.gameClass = new GameClass(gameContext);
 }
 
 /* =========================================
@@ -116,10 +135,11 @@ async function initFunctions() {
   await yanNeed();
   initI18n('ru' /*lang*/); // const lang = ysdk.environment.i18n.lang.toLowerCase();
 
-  await assetsManager.loadTextures();
+  await gameContext.assetsManager.loadTextures();
   // await assetsManager.loadModels();
-  await physicsClass.initRapier();
-  await audioClass.loadAudio();
+  await gameContext.physicsClass.initRapier();
+  await gameContext.audioClass.loadAudio();
+  await gameContext.controlClass.addKeyListeners();
 }
 
 
@@ -135,7 +155,6 @@ export async function startGame(ysdkInstance) {
   try {
     await BeforeStart();
   } catch (error) {
-    toggleLoader(false);
     if (window.showInitError) {
       window.showInitError(error);
     } else {
@@ -148,33 +167,37 @@ export async function startGame(ysdkInstance) {
    1. BEFORE START
 ========================================= */
 async function BeforeStart() {
-  toggleLoader(true);
+
+
   loaderLine.setAttribute("style", "width:30%");
 
   await initClases();
   await initFunctions();
 
   loaderLine.setAttribute("style", "width:100%");
-  toggleLoader(false);
-  paramsClass.gameInit = true;
+
+  gameContext.paramsClass.gameInit = true;
+  gameContext.ui.show('main_screen')
   // ysdk.features.LoadingAPI.ready();
-  // ysdk.features.GameplayAPI.stop();
+  // ysdk.features.GameplayAPI.stop();  
+  startMatch();
+
+
 }
 
 
 // function resetMatch() {
 
-//   if (controlClass != undefined) controlClass.removedKeyListeners();
+//   if (gameContext.controlClass != undefined) gameContext.controlClass.removedKeyListeners();
 
-//   worldClass = null;
-//   physicsClass = null;
-//   levelClass = null;
+//   gameContext.worldClass = null;
+//   gameContext.physicsClass = null;
+//   gameContext.levelClass = null;
 
-//   controlClass = null;
-//   paramsClass = null;
-//   scoreClass = null;
+//   gameContext.controlClass = null;
+//   gameContext.paramsClass = null;
+//   gameContext.scoreClass = null;
 // }
-
 
 
 
@@ -184,13 +207,28 @@ async function BeforeStart() {
 function animate(delta) {
 
 
-  stats.update();
-  for (let i = 0, n = physicsClass.dynamicBodies.length; i < n; i++) {
-    physicsClass.dynamicBodies[i][0].position.copy(physicsClass.dynamicBodies[i][1].translation())
-    physicsClass.dynamicBodies[i][0].quaternion.copy(physicsClass.dynamicBodies[i][1].rotation())
+
+  switch (gameContext.paramsClass.gameState) {
+    case 1:
+      //
+      break;
+    case 2:
+      //
+      break;
+    case 2:
+      //
+      break;
   }
-  physicsClass.updateInstancedTransforms();
-  physicsClass.world.step(physicsClass.eventQueue);
+
+
+
+  stats.update();
+  for (let i = 0, n = gameContext.physicsClass.dynamicBodies.length; i < n; i++) {
+    gameContext.physicsClass.dynamicBodies[i][0].position.copy(gameContext.physicsClass.dynamicBodies[i][1].translation())
+    gameContext.physicsClass.dynamicBodies[i][0].quaternion.copy(gameContext.physicsClass.dynamicBodies[i][1].rotation())
+  }
+  gameContext.physicsClass.updateInstancedTransforms();
+  gameContext.physicsClass.world.step(gameContext.physicsClass.eventQueue);
 
   renderer.render(scene, camera);
 
@@ -210,9 +248,9 @@ renderer.setAnimationLoop(() => {
 
   accumulator += frameDelta;
 
-  if (paramsClass != null && paramsClass.gameInit) {
+  if (gameContext.paramsClass != null && gameContext.paramsClass.gameInit) {
     while (accumulator >= dt) {
-      animate(dt); // твоя игровая логика и рендер
+      animate(dt);
       accumulator -= dt;
     }
   }
@@ -223,41 +261,59 @@ renderer.setAnimationLoop(() => {
 
 
 
+document.querySelector('body').addEventListener('click', (e) => {
 
+  const btn = e.target.closest('.btn');
+  if (!btn) return;
 
-function toggleLoader(need) {
-  const loader = document.querySelector('.loader_screen');
-  if (!loader) return;
+  const action = btn.dataset.action;
 
-  if (need) {
-    loader.classList.remove('hidden_screen');
-  } else {
-    // Плавное скрытие
-    loader.classList.add('hidden_screen');
+  switch (action) {
+
+    case 'newGame':
+      gameContext.ui.show('free_game_screen');
+      break;
+    case 'settings':
+      gameContext.ui.show('settings_screen');
+      break;
+    case 'back':
+      gameContext.ui.show('main_screen');
+      break;
+    case 'start_game_btn':
+      gameContext.ui.hideAll();
+      startMatch();
+      break;
+    case 'pause':
+      // pauseGame();
+      break;
   }
-}
+});
+
+
+
+
 
 
 
 
 // document.addEventListener("visibilitychange", function () {
 //   // Проверяем, инициализирован ли вообще аудио
-//   if (!audioClass) return;
+//   if (!gameContext.audioClass) return;
 
 //   if (document.visibilityState === 'visible') {
-//     if (!gameClass.pause && !gameClass.showGamePopup) {
-//       gameClass.gameStarting = true;
-//       audioClass.togglePauseAll(!gameClass.gameStarting);
+//     if (!gameContext.gameClass.pause && !gameContext.gameClass.showGamePopup) {
+//       gameContext.gameClass.gameStarting = true;
+//       gameContext.audioClass.togglePauseAll(!gameContext.gameClass.gameStarting);
 //     }
-//     gameClass.visible = true;
+//     gameContext.gameClass.visible = true;
 //   } else {
-//     if (!gameClass.pause && !gameClass.showGamePopup) {
-//       gameClass.gameStarting = false;
-//       audioClass.togglePauseAll(!gameClass.gameStarting);
-//     } else if (!gameClass.pause) {
-//       audioClass.togglePauseAll(!gameClass.gameStarting);
+//     if (!gameContext.gameClass.pause && !gameContext.gameClass.showGamePopup) {
+//       gameContext.gameClass.gameStarting = false;
+//       gameContext.audioClass.togglePauseAll(!gameContext.gameClass.gameStarting);
+//     } else if (!gameContext.gameClass.pause) {
+//       gameContext.audioClass.togglePauseAll(!gameContext.gameClass.gameStarting);
 //     }
-//     gameClass.visible = false;
+//     gameContext.gameClass.visible = false;
 //   }
 // });
 
