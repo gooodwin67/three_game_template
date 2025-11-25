@@ -16,6 +16,7 @@ import { AssetsManager } from './assets-manager';
 import { ScreenManager } from './screen-manager';
 import { initI18n } from './i18n.js';
 import { GameClass } from './game';
+import { PlayerClass } from './player';
 
 
 console.clear();
@@ -105,6 +106,7 @@ let controls = new OrbitControls(camera, renderer.domElement);
 async function startMatch() {
   gameContext.ui.hideAll()
   gameContext.gameClass.loadMesh();
+  gameContext.playerClass.loadPlayer();
 }
 
 
@@ -126,6 +128,7 @@ async function initClases() {
   gameContext.dataClass = new DataClass(gameContext);
   gameContext.controlClass = new ControlClass(gameContext);
   gameContext.gameClass = new GameClass(gameContext);
+  gameContext.playerClass = new PlayerClass(gameContext);
 }
 
 /* =========================================
@@ -180,7 +183,7 @@ async function BeforeStart() {
   gameContext.ui.show('main_screen')
   // ysdk.features.LoadingAPI.ready();
   // ysdk.features.GameplayAPI.stop();  
-  startMatch();
+  //startMatch();
 
 
 }
@@ -208,17 +211,20 @@ function animate(delta) {
 
 
 
-  switch (gameContext.paramsClass.gameState) {
-    case 1:
-      //
+  switch (gameContext.paramsClass.currentGameState) {
+    case gameContext.paramsClass.gameState.menu:
+
       break;
-    case 2:
-      //
+    case gameContext.paramsClass.gameState.play:
+      gameContext.playerClass.update(delta);
+
       break;
-    case 2:
+    case gameContext.paramsClass.gameState.pause:
       //
       break;
   }
+
+
 
 
 
@@ -281,6 +287,7 @@ document.querySelector('body').addEventListener('click', (e) => {
       break;
     case 'start_game_btn':
       gameContext.ui.hideAll();
+      gameContext.paramsClass.startGame();
       startMatch();
       break;
     case 'pause':

@@ -4,6 +4,7 @@ export class ControlClass {
   constructor(gameContext) {
     this.renderer = gameContext.renderer;
     this.camera = gameContext.camera;
+    this.events = gameContext.events;
 
 
     this.mouse = new THREE.Vector3();
@@ -17,7 +18,7 @@ export class ControlClass {
   }
 
   async addKeyListeners() {
-    const element = this.renderer.domElement; // ← canvas
+    const element = this.renderer.domElement;
     window.addEventListener('keydown', this.onKeyDown);
     window.addEventListener('keyup', this.onKeyUp);
     element.addEventListener('mousedown', this.onKeyDown);
@@ -27,7 +28,7 @@ export class ControlClass {
   }
 
   removedKeyListeners() {
-    const element = this.renderer.domElement; // ← canvas
+    const element = this.renderer.domElement;
     window.removeEventListener('keydown', this.onKeyDown);
     window.removeEventListener('keyup', this.onKeyUp);
     element.removeEventListener('mousedown', this.onKeyDown);
@@ -43,7 +44,7 @@ export class ControlClass {
     this.mouse.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
     this.raycaster.setFromCamera(this.mouse, this.camera);
 
-    this.downKeys();
+
   }
 
   onTapUp(event) {
@@ -53,57 +54,51 @@ export class ControlClass {
     this.mouse.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
     this.raycaster.setFromCamera(this.mouse, this.camera);
 
-    this.upKeys();
+
   }
 
   onKeyDown(event) {
     switch (event.code) {
       case 'KeyW':
       case 'ArrowUp':
-        this.downKeys();
+        this.events.emit('player_forward', 1);
         break;
-      case 'KeyZ':
+      case 'KeyS':
       case 'ArrowDown':
-        this.downKeys();
+        this.events.emit('player_backward', 1);
         break;
-      case 'KeyM':
+      case 'KeyA':
       case 'ArrowLeft':
-        this.downKeys();
+        this.events.emit('player_left', 1);
         break;
       case 'KeyD':
       case 'ArrowRight':
-        this.downKeys();
-        break;
-      case 'KeyP':
-        this.downKeys();
+        this.events.emit('player_right', 1);
         break;
     }
   }
+
 
   onKeyUp(event) {
     switch (event.code) {
       case 'KeyW':
       case 'ArrowUp':
-        this.upKeys();
+        this.events.emit('player_forward', 0);
         break;
-      case 'KeyZ':
+      case 'KeyS':
       case 'ArrowDown':
-        this.upKeys();
+        this.events.emit('player_backward', 0);
         break;
-      case 'KeyM':
+      case 'KeyA':
       case 'ArrowLeft':
-        this.upKeys();
+        this.events.emit('player_left', 0);
         break;
       case 'KeyD':
       case 'ArrowRight':
-        this.upKeys();
+        this.events.emit('player_right', 0);
         break;
     }
   }
 
-  downKeys(player = null) {
-  }
 
-  upKeys(player = null) {
-  }
 }
