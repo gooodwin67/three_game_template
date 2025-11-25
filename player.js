@@ -6,11 +6,15 @@ export class PlayerClass {
     this.scene = gameContext.scene;
     this.events = gameContext.events;
 
+    this.physicsClass = gameContext.physicsClass;
+
     this.player = null;
+    this.playerBody = null;
     this.options = {
       size: { w: 0.1, h: 0.1, d: 0.1 },
       color: 0x770074,
-      speed: 0.5,
+      speed: 1.5,
+      name: 'player',
     }
     this.move = { left: 0, right: 0, forward: 0, backward: 0 }
 
@@ -19,8 +23,17 @@ export class PlayerClass {
 
   loadPlayer() {
     let geometryMesh = new THREE.BoxGeometry(this.options.size.w, this.options.size.h, this.options.size.d);
-    let materialMesh = new THREE.MeshBasicMaterial({ color: this.options.color, side: THREE.DoubleSide });
+    let materialMesh = new THREE.MeshPhongMaterial({ color: this.options.color, side: THREE.DoubleSide });
     this.player = new THREE.Mesh(geometryMesh, materialMesh);
+
+    this.player.userData = {...this.options};
+
+    this.player.castShadow = true;
+    this.player.receiveShadow = true;
+    this.player.position.set(0,1,0);
+
+    this.physicsClass.addPhysicsToObject(this.player);
+    this.playerBody = this.player.userData.body;
 
     this.scene.add(this.player)
   }
@@ -34,13 +47,21 @@ export class PlayerClass {
 
   update(delta) {
 
-    if (!this.player) return;
+    if (!this.playerBody) return;
+    
+    const velocity = this.playerBody.linvel();
+    const speed = this.options.speed;
 
-    const moveDistance = this.options.speed * delta;
-    if (this.move.forward) this.player.position.y += moveDistance;
-    if (this.move.backward) this.player.position.y -= moveDistance;
-    if (this.move.left) this.player.position.x -= moveDistance;
-    if (this.move.right) this.player.position.x += moveDistance;
+    velocity.x = 0;
+    velocity.z = 0;
+
+    // const moveDistance = this.options.speed * delta;
+    if (this.move.forward) velocity.z -= speed;
+    if (this.move.backward) velocity.z += speed;
+    if (this.move.left) velocity.x -= speed;
+    if (this.move.right) velocity.x += speed;
+
+    this.playerBody.setLinvel(velocity);
   }
 
 

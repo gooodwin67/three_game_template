@@ -7,12 +7,25 @@ export class PhysicsClass {
     this.eventQueue = null;
     this.dynamicBodies = [];
 
+    this.playersHandles = [];
+
+    this.RAPIER = null;
+
 
 
     // --- НОВОЕ: учёт инстансов ---
     this.instancedBodies = [];          // { mesh, index, size:THREE.Vector3, body }
     this._dummy = new THREE.Object3D(); // переиспользуемый dummy
 
+  }
+
+  update() {
+    for (let i = 0, n = this.dynamicBodies.length; i < n; i++) {
+      this.dynamicBodies[i][0].position.copy(this.dynamicBodies[i][1].translation())
+      this.dynamicBodies[i][0].quaternion.copy(this.dynamicBodies[i][1].rotation())
+    }
+    this.updateInstancedTransforms();
+    this.world.step(this.eventQueue);
   }
 
   async loadRapier() {
@@ -32,9 +45,9 @@ export class PhysicsClass {
   }
 
   async initRapier() {
-    const RAPIER = await this.loadRapier();
-    this.world = new RAPIER.World(new RAPIER.Vector3(0, -9.81, 0));
-    this.eventQueue = new RAPIER.EventQueue(true);
+    this.RAPIER = await this.loadRapier();
+    this.world = new this.RAPIER.World(new this.RAPIER.Vector3(0, -9.81, 0));
+    this.eventQueue = new this.RAPIER.EventQueue(true);
   }
 
 
@@ -173,7 +186,7 @@ export class PhysicsClass {
 
     }
 
-    else if (obj != undefined && obj.userData.name.includes('tops')) {
+    else if (obj != undefined && obj.userData.name.includes('ground')) {
 
       let body;
       let shape;
@@ -188,7 +201,7 @@ export class PhysicsClass {
       obj.userData.orgRotation = originalRotation;
 
       body = this.world.createRigidBody(this.RAPIER.RigidBodyDesc.kinematicPositionBased().setTranslation(obj.position.x, obj.position.y, obj.position.z).setRotation(obj.quaternion).setCanSleep(false).enabledRotations(false, false, false).setLinearDamping(0).setAngularDamping(2.0));
-      shape = this.RAPIER.ColliderDesc.cuboid(size.x / 2, size.y / 2, size.z / 2).setMass(1).setRestitution(0.0).setFriction(0.3);
+      shape = this.RAPIER.ColliderDesc.cuboid(size.x / 2, size.y / 2, size.z / 2).setMass(1).setRestitution(2.0).setFriction(0.3);
       shape.setActiveEvents(this.RAPIER.ActiveEvents.COLLISION_EVENTS);
       let collide = this.world.createCollider(shape, body);
       obj.userData.body = body;

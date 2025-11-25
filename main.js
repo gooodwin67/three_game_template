@@ -16,6 +16,7 @@ import { AssetsManager } from './assets-manager';
 import { ScreenManager } from './screen-manager';
 import { initI18n } from './i18n.js';
 import { GameClass } from './game';
+import { WorldClass } from './world';
 import { PlayerClass } from './player';
 
 
@@ -37,7 +38,7 @@ scene.background = new THREE.Color(0xc9e1f4);
 // scene.fog = new THREE.Fog(scene.background, 1, 50);
 const camera = new THREE.PerspectiveCamera(25, window.innerWidth / window.innerHeight, 0.1, 2000);
 camera.position.x = 0;
-camera.position.y = 0;
+camera.position.y = 2;
 camera.position.z = 5;
 
 // ★ фиксируем HFOV не от текущего окна, а от референсного aspect
@@ -107,6 +108,9 @@ async function startMatch() {
   gameContext.ui.hideAll()
   gameContext.gameClass.loadMesh();
   gameContext.playerClass.loadPlayer();
+  gameContext.worldClass.loadLight(true, true);
+
+  gameContext.paramsClass.startGame();
 }
 
 
@@ -128,6 +132,7 @@ async function initClases() {
   gameContext.dataClass = new DataClass(gameContext);
   gameContext.controlClass = new ControlClass(gameContext);
   gameContext.gameClass = new GameClass(gameContext);
+  gameContext.worldClass = new WorldClass(gameContext);
   gameContext.playerClass = new PlayerClass(gameContext);
 }
 
@@ -183,7 +188,7 @@ async function BeforeStart() {
   gameContext.ui.show('main_screen')
   // ysdk.features.LoadingAPI.ready();
   // ysdk.features.GameplayAPI.stop();  
-  //startMatch();
+  startMatch();
 
 
 }
@@ -210,13 +215,13 @@ async function BeforeStart() {
 function animate(delta) {
 
 
-
   switch (gameContext.paramsClass.currentGameState) {
     case gameContext.paramsClass.gameState.menu:
 
       break;
     case gameContext.paramsClass.gameState.play:
       gameContext.playerClass.update(delta);
+      gameContext.physicsClass.update(delta);
 
       break;
     case gameContext.paramsClass.gameState.pause:
@@ -229,12 +234,7 @@ function animate(delta) {
 
 
   stats.update();
-  for (let i = 0, n = gameContext.physicsClass.dynamicBodies.length; i < n; i++) {
-    gameContext.physicsClass.dynamicBodies[i][0].position.copy(gameContext.physicsClass.dynamicBodies[i][1].translation())
-    gameContext.physicsClass.dynamicBodies[i][0].quaternion.copy(gameContext.physicsClass.dynamicBodies[i][1].rotation())
-  }
-  gameContext.physicsClass.updateInstancedTransforms();
-  gameContext.physicsClass.world.step(gameContext.physicsClass.eventQueue);
+  
 
   renderer.render(scene, camera);
 
@@ -287,7 +287,7 @@ document.querySelector('body').addEventListener('click', (e) => {
       break;
     case 'start_game_btn':
       gameContext.ui.hideAll();
-      gameContext.paramsClass.startGame();
+      
       startMatch();
       break;
     case 'pause':
