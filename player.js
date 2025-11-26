@@ -11,9 +11,9 @@ export class PlayerClass {
     this.player = null;
     this.playerBody = null;
     this.options = {
-      size: { w: 0.1, h: 0.1, d: 0.1 },
+      size: { w: 0.18, h: 0.1, d: 0.1 },
       color: 0x770074,
-      speed: 1.5,
+      speed: 1.0,
       name: 'player',
     }
     this.move = { left: 0, right: 0, forward: 0, backward: 0 }
@@ -22,15 +22,15 @@ export class PlayerClass {
   }
 
   loadPlayer() {
-    let geometryMesh = new THREE.BoxGeometry(this.options.size.w, this.options.size.h, this.options.size.d);
-    let materialMesh = new THREE.MeshPhongMaterial({ color: this.options.color, side: THREE.DoubleSide });
+    let geometryMesh = new THREE.SphereGeometry(this.options.size.w);
+    let materialMesh = new THREE.MeshStandardMaterial({ color: this.options.color, side: THREE.DoubleSide });
     this.player = new THREE.Mesh(geometryMesh, materialMesh);
 
-    this.player.userData = {...this.options};
+    this.player.userData = { ...this.options };
 
     this.player.castShadow = true;
     this.player.receiveShadow = true;
-    this.player.position.set(0,1,0);
+    this.player.position.set(0, 1, 0);
 
     this.physicsClass.addPhysicsToObject(this.player);
     this.playerBody = this.player.userData.body;
@@ -48,7 +48,7 @@ export class PlayerClass {
   update(delta) {
 
     if (!this.playerBody) return;
-    
+
     const velocity = this.playerBody.linvel();
     const speed = this.options.speed;
 

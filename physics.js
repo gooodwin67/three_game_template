@@ -20,12 +20,12 @@ export class PhysicsClass {
   }
 
   update() {
+    this.world.step(this.eventQueue);
     for (let i = 0, n = this.dynamicBodies.length; i < n; i++) {
       this.dynamicBodies[i][0].position.copy(this.dynamicBodies[i][1].translation())
       this.dynamicBodies[i][0].quaternion.copy(this.dynamicBodies[i][1].rotation())
     }
     this.updateInstancedTransforms();
-    this.world.step(this.eventQueue);
   }
 
   async loadRapier() {
@@ -47,6 +47,13 @@ export class PhysicsClass {
   async initRapier() {
     this.RAPIER = await this.loadRapier();
     this.world = new this.RAPIER.World(new this.RAPIER.Vector3(0, -9.81, 0));
+
+    // --- ОПТИМИЗАЦИЯ ---
+    // Уменьшаем количество проходов решателя (стандартно 4)
+    // Физика станет чуть менее "жесткой", но гораздо быстрее
+    this.world.maxVelocityIterations = 2;
+    this.world.maxPositionIterations = 1;
+
     this.eventQueue = new this.RAPIER.EventQueue(true);
   }
 
@@ -73,7 +80,7 @@ export class PhysicsClass {
   }
 
   // --- НОВОЕ: динамический инстанс (каждый блок — отдельное rigid body) ---
-  addInstancedDynamic(mesh, index, opts) {
+  addInstancedDynamic(mas, mesh, index, opts) {
     const size = PhysicsClass._toVec3(opts.size);
     const pos = PhysicsClass._toVec3(opts.position ?? { x: 0, y: 0, z: 0 });
     const rotQ = (opts.quaternion?.isQuaternion) ? opts.quaternion : new THREE.Quaternion();
@@ -82,11 +89,16 @@ export class PhysicsClass {
       this.RAPIER.RigidBodyDesc.dynamic()
         .setTranslation(pos.x, pos.y, pos.z)
         .setRotation({ x: rotQ.x, y: rotQ.y, z: rotQ.z, w: rotQ.w })
+        .setLinearDamping(2.5)   // Сопротивление движению (воздух)
+        .setAngularDamping(0.5) // Сопротивление вращению (чтобы перестал катиться)
     );
 
-    const col = this.RAPIER.ColliderDesc.cuboid(size.x / 2, size.y / 2, size.z / 2)
-      .setFriction(0.6).setRestitution(0.1);
-    this.world.createCollider(col, rb);
+    const col = this.RAPIER.ColliderDesc.ball(size.x / 2)
+      .setMass(1).setFriction(0).setRestitution(1.5);
+
+    mas[index].userData.body = rb;
+    mas[index].userData.shape = col;
+    mas[index].userData.collide = this.world.createCollider(col, rb);
 
     this.instancedBodies.push({ mesh, index, size, body: rb });
   }
@@ -109,20 +121,23 @@ export class PhysicsClass {
     mas[index].userData.shape = col;
     mas[index].userData.collide = this.world.createCollider(col, rb);
 
+
+
     this.instancedBodies.push({ mesh, index, size, body: rb });
   }
 
   // --- НОВОЕ: вызывать в animate для синхронизации инстансов ---
   updateInstancedTransforms() {
     const dummy = this._dummy;
-    // чтобы не ставить needsUpdate по 100 раз на один и тот же mesh:
     const touched = new Set();
 
     for (const it of this.instancedBodies) {
-      const invBase = PhysicsClass._ensureInvBase(it.mesh);
+      // ОПТИМИЗАЦИЯ: Если тело спит, пропускаем пересчет матрицы
+      if (it.body.isSleeping()) continue;
 
+      const invBase = PhysicsClass._ensureInvBase(it.mesh);
       const t = it.body.translation();
-      const r = it.body.rotation(); // quat
+      const r = it.body.rotation();
 
       dummy.position.set(t.x, t.y, t.z);
       dummy.quaternion.set(r.x, r.y, r.z, r.w);
@@ -133,6 +148,7 @@ export class PhysicsClass {
       touched.add(it.mesh);
     }
 
+    // Если ни один кубик не двигался, мы даже не пошлем данные на GPU
     for (const mesh of touched) mesh.instanceMatrix.needsUpdate = true;
   }
 
@@ -153,11 +169,11 @@ export class PhysicsClass {
       obj.userData.size = size;
       obj.userData.orgRotation = originalRotation;
 
-      body = this.world.createRigidBody(this.RAPIER.RigidBodyDesc.dynamic().setTranslation(obj.position.x, obj.position.y, obj.position.z).setRotation(obj.quaternion).setCanSleep(false).enabledRotations(false, false, false).setLinearDamping(0).setAngularDamping(2.0));
-      shape = this.RAPIER.ColliderDesc.cuboid(size.x / 2, size.y / 2, size.z / 2)
-        .setMass(0.6)
-        .setRestitution(0.0)
-        .setFriction(0.5)
+      body = this.world.createRigidBody(this.RAPIER.RigidBodyDesc.dynamic().setTranslation(obj.position.x, obj.position.y, obj.position.z).setRotation(obj.quaternion).setCanSleep(false).enabledRotations(false, false, false).setLinearDamping(2.0).setAngularDamping(2.0));
+      shape = this.RAPIER.ColliderDesc.ball(size.x / 2)
+        .setMass(100)
+        .setRestitution(0.5)
+        .setFriction(0)
         .setActiveEvents(this.RAPIER.ActiveEvents.COLLISION_EVENTS);
 
       obj.userData.body = body;
@@ -201,7 +217,7 @@ export class PhysicsClass {
       obj.userData.orgRotation = originalRotation;
 
       body = this.world.createRigidBody(this.RAPIER.RigidBodyDesc.kinematicPositionBased().setTranslation(obj.position.x, obj.position.y, obj.position.z).setRotation(obj.quaternion).setCanSleep(false).enabledRotations(false, false, false).setLinearDamping(0).setAngularDamping(2.0));
-      shape = this.RAPIER.ColliderDesc.cuboid(size.x / 2, size.y / 2, size.z / 2).setMass(1).setRestitution(2.0).setFriction(0.3);
+      shape = this.RAPIER.ColliderDesc.cuboid(size.x / 2, size.y / 2, size.z / 2).setMass(1).setRestitution(0.0).setFriction(1);
       shape.setActiveEvents(this.RAPIER.ActiveEvents.COLLISION_EVENTS);
       let collide = this.world.createCollider(shape, body);
       obj.userData.body = body;

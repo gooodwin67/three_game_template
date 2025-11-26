@@ -6,6 +6,34 @@ export class ScreenManager {
     this.screens = document.querySelectorAll('.screen');
     this.currentScreen = null;
 
+    document.querySelector('body').addEventListener('click', (e) => {
+
+      const btn = e.target.closest('.btn');
+      if (!btn) return;
+
+      const action = btn.dataset.action;
+
+      switch (action) {
+
+        case 'newGame':
+          gameContext.ui.show('free_game_screen');
+          break;
+        case 'settings':
+          gameContext.ui.show('settings_screen');
+          break;
+        case 'back':
+          gameContext.ui.show('main_screen');
+          break;
+        case 'start_game_btn':
+          gameContext.ui.hideAll();
+          this.events.emit('start_match', true);
+          break;
+        case 'pause':
+          // pauseGame();
+          break;
+      }
+    });
+
     this.initListeners();
   }
 
