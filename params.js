@@ -38,27 +38,6 @@ export class ParamsClass {
   return false;
  }
 
- // document.addEventListener("visibilitychange", function () {
- //   // Проверяем, инициализирован ли вообще аудио
- //   if (!gameContext.audioClass) return;
-
- //   if (document.visibilityState === 'visible') {
- //     if (!gameContext.gameClass.pause && !gameContext.gameClass.showGamePopup) {
- //       gameContext.gameClass.gameStarting = true;
- //       gameContext.audioClass.togglePauseAll(!gameContext.gameClass.gameStarting);
- //     }
- //     gameContext.gameClass.visible = true;
- //   } else {
- //     if (!gameContext.gameClass.pause && !gameContext.gameClass.showGamePopup) {
- //       gameContext.gameClass.gameStarting = false;
- //       gameContext.audioClass.togglePauseAll(!gameContext.gameClass.gameStarting);
- //     } else if (!gameContext.gameClass.pause) {
- //       gameContext.audioClass.togglePauseAll(!gameContext.gameClass.gameStarting);
- //     }
- //     gameContext.gameClass.visible = false;
- //   }
- // });
-
  initCustomScroll() {
   const screens = [
    '.free_game_screen',

@@ -1,106 +1,69 @@
 import * as THREE from 'three';
-import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
-import Stats from 'three/addons/libs/stats.module.js';
-
-import { yanNeed } from "./functions";
-
+import { SdkManager } from './yan.js';
+import { yanNeed } from "./functions.js"; // Проверьте пути!
 import { EventEmitter } from './events.js';
-
-import { ParamsClass } from '/params';
-
-import { PhysicsClass } from "./physics";
-import { AudioClass } from "./audio";
-import { ControlClass } from './control';
-import { DataClass } from './data';
-import { AssetsManager } from './assets-manager';
-import { ScreenManager } from './screen-manager';
+import { InitClass } from './init.js'; // Лучше использовать относительные пути ./
+import { ParamsClass } from './params.js';
+import { PhysicsClass } from "./physics.js";
+import { AudioClass } from "./audio.js";
+import { ControlClass } from './control.js';
+import { DataClass } from './data.js';
+import { AssetsManager } from './assets-manager.js';
+import { ScreenManager } from './screen-manager.js';
 import { initI18n } from './i18n.js';
-import { GameClass } from './game';
-import { WorldClass } from './world';
-import { PlayerClass } from './player';
-import { InstancesClass } from './instances';
-
+import { GameClass } from './game.js';
+import { WorldClass } from './world.js';
+import { PlayerClass } from './player.js';
+import { InstancesClass } from './instances.js';
 
 console.clear();
 
-let clock = new THREE.Clock();
-
-
 const gameContext = {};
+const clock = new THREE.Clock(); // Часы инициализируем здесь
 
+/* =========================================
+   ENTRY POINT (Точка входа)
+========================================= */
+// Эта функция вызывается из SdkManager, когда SDK готов (или null)
+export async function startGame(ysdkInstance) {
+  // Сохраняем ysdk если нужно
+  // window.ysdk = ysdkInstance; 
 
-
-
-const scene = new THREE.Scene();
-scene.background = new THREE.Color(0xc9e1f4);
-//scene.fog = new THREE.Fog(scene.background, 1, 35);
-const camera = new THREE.PerspectiveCamera(25, window.innerWidth / window.innerHeight, 0.1, 2000);
-camera.position.x = 0;
-camera.position.y = 4;
-camera.position.z = 12;
-
-// ★ фиксируем HFOV не от текущего окна, а от референсного aspect
-const DESIGN_ASPECT = 16 / 9; // выбери свою базу (можно 16/9)
-const baseVFOV = THREE.MathUtils.degToRad(25);
-const FIXED_HFOV = 2 * Math.atan(Math.tan(baseVFOV / 2) * DESIGN_ASPECT);
-
-
-
-function setVhVar() {
-  const h = (window.visualViewport?.height || window.innerHeight) * 0.01;
-  document.documentElement.style.setProperty('--vh', `${h}px`);
+  try {
+    await BeforeStart();
+  } catch (error) {
+    if (window.showInitError) {
+      window.showInitError(error);
+    } else {
+      console.error('Init error', error);
+    }
+  }
 }
-setVhVar();
-window.addEventListener('resize', setVhVar);
-window.addEventListener('orientationchange', setVhVar);
-window.visualViewport?.addEventListener('resize', setVhVar);
 
-let stats = new Stats();
-document.body.appendChild(stats.dom);
-stats.dom.style.top = "0";
-stats.dom.style.left = "0";
+/* =========================================
+   BEFORE START
+========================================= */
+async function BeforeStart() {
+  const loaderLine = document.querySelector('.loader_line');
+  if(loaderLine) loaderLine.style.width = "30%";
 
-const renderer = new THREE.WebGLRenderer({ antialias: false });
-renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1));
-renderer.setSize(window.innerWidth, window.innerHeight);
-document.body.appendChild(renderer.domElement);
-renderer.shadowMap.enabled = true;
-renderer.shadowMap.type = THREE.PCFSoftShadowMap; // default THREE.PCFShadowMap
+  await initClases();
+  await initFunctions();
 
-renderer.outputColorSpace = THREE.SRGBColorSpace;
-renderer.toneMapping = THREE.ACESFilmicToneMapping;
-renderer.toneMappingExposure = 1.05;
+  if(loaderLine) loaderLine.style.width = "100%";
 
-function onWindowResize() {
-  const w = document.body.offsetWidth;
-  const h = document.body.offsetHeight;
-  const aspect = w / h;
+  gameContext.paramsClass.gameInit = true;
+  gameContext.ui.show('main_screen');
+  
+  // Подписываемся на старт матча
+  gameContext.events.on('start_match', () => startMatch());
 
-  // пересчитываем вертикальный FOV при фиксированном горизонтальном
-  let vFOV = 2 * Math.atan(Math.tan(FIXED_HFOV / 2) / aspect);
-
-  // необязательные «ограждения», чтобы на экстремальных экранах не уходить в микроскопические/гигантские значения
-  const vMin = THREE.MathUtils.degToRad(4);
-  const vMax = THREE.MathUtils.degToRad(90);
-  vFOV = THREE.MathUtils.clamp(vFOV, vMin, vMax);
-
-  camera.fov = THREE.MathUtils.radToDeg(vFOV);
-  camera.aspect = aspect;
-  camera.updateProjectionMatrix();
-
-  renderer.setSize(w, h);
+  // ВАЖНО: Запускаем цикл отрисовки только когда все классы созданы!
+  startAnimationLoop();
 }
-window.addEventListener('resize', onWindowResize);
-onWindowResize();
-
-
-
-// let ysdk;
-let controls = new OrbitControls(camera, renderer.domElement);
-
 
 async function startMatch() {
-  gameContext.ui.hideAll()
+  gameContext.ui.hideAll();
   gameContext.gameClass.loadMesh();
   gameContext.playerClass.loadPlayer();
   gameContext.instancesClass.init();
@@ -108,16 +71,16 @@ async function startMatch() {
   gameContext.paramsClass.startGame();
 }
 
-
 /* =========================================
    INIT CLASSES
 ========================================= */
 async function initClases() {
-  gameContext.scene = scene;
-  gameContext.camera = camera;
-  gameContext.renderer = renderer;
-
+  gameContext.initClass = new InitClass(gameContext); 
   gameContext.events = new EventEmitter();
+
+  gameContext.scene = gameContext.initClass.scene;
+  gameContext.camera = gameContext.initClass.camera;
+  gameContext.renderer = gameContext.initClass.renderer;
 
   gameContext.ui = new ScreenManager(gameContext);
   gameContext.paramsClass = new ParamsClass(gameContext);
@@ -136,12 +99,11 @@ async function initClases() {
    INIT FUNCTIONS
 ========================================= */
 async function initFunctions() {
-  await yanNeed();
+  if(typeof yanNeed === 'function') await yanNeed();
   gameContext.paramsClass.initCustomScroll();
-  initI18n('ru' /*lang*/); // const lang = ysdk.environment.i18n.lang.toLowerCase();
+  initI18n('ru');
 
   await gameContext.assetsManager.loadTextures();
-  // await assetsManager.loadModels();
   await gameContext.physicsClass.initRapier();
   await gameContext.audioClass.loadAudio();
   await gameContext.controlClass.addKeyListeners();
@@ -149,62 +111,11 @@ async function initFunctions() {
 
 
 /* =========================================
-   START
+   GAME LOOP & RENDER
 ========================================= */
-export async function startGame(ysdkInstance) {
-  // ysdk = ysdkInstance;          // сохраняем локально в модуле
-  // window.ysdk = ysdkInstance;   // если где-то ещё рассчитываешь на глобал
-  try {
-    await BeforeStart();
-  } catch (error) {
-    if (window.showInitError) {
-      window.showInitError(error);
-    } else {
-      console.error('Init error', error);
-    }
-  }
-}
-
-/* =========================================
-   1. BEFORE START
-========================================= */
-async function BeforeStart() {
-
-  const loaderLine = document.querySelector('.loader_line');
-  loaderLine.setAttribute("style", "width:30%");
-
-  await initClases();
-  await initFunctions();
-
-  loaderLine.setAttribute("style", "width:100%");
-
-  gameContext.paramsClass.gameInit = true;
-  gameContext.ui.show('main_screen')
-  // ysdk.features.LoadingAPI.ready();
-  // ysdk.features.GameplayAPI.stop();  
-  gameContext.events.on('start_match', () => startMatch());
-
-
-}
-
-
-// function resetMatch() {
-
-//   if (gameContext.controlClass != undefined) gameContext.controlClass.removedKeyListeners();
-
-//   gameContext.worldClass = null;
-//   gameContext.physicsClass = null;
-//   gameContext.levelClass = null;
-
-//   gameContext.controlClass = null;
-//   gameContext.paramsClass = null;
-//   gameContext.scoreClass = null;
-// }
-
-
-
 function update(delta) {
-  // Тут ТОЛЬКО логика и физика
+  if (!gameContext.paramsClass) return;
+
   switch (gameContext.paramsClass.currentGameState) {
     case gameContext.paramsClass.gameState.play:
       gameContext.playerClass.update(delta);
@@ -214,58 +125,40 @@ function update(delta) {
 }
 
 function render() {
-  // Тут ТОЛЬКО отрисовка
-  stats.update();
-  renderer.render(scene, camera);
+  if (gameContext.initClass && gameContext.initClass.stats) {
+    gameContext.initClass.stats.update();
+  }
+  
+  if (gameContext.renderer && gameContext.scene && gameContext.camera) {
+    gameContext.renderer.render(gameContext.scene, gameContext.camera);
+  }
 }
 
-let accumulator = 0;
-const dt = 1 / 60;
-const maxFrame = 0.1;
+function startAnimationLoop() {
+    let accumulator = 0;
+    const dt = 1 / 60;
+    const maxFrame = 0.1;
+  
+    gameContext.renderer.setAnimationLoop(() => {
+      let frameDelta = clock.getDelta();
+      if (frameDelta > maxFrame) frameDelta = maxFrame;
+      accumulator += frameDelta;
+      
+      let maxSteps = 5;
+      while (accumulator >= dt && maxSteps > 0) {
+        update(dt);
+        accumulator -= dt;
+        maxSteps--;
+      }
+  
+      if (accumulator > dt) accumulator = 0;
+      render();
+    });
+}
 
-renderer.setAnimationLoop(() => {
-  let frameDelta = clock.getDelta();
-  // Если вкладка была неактивна, не пытаемся просчитать всё пропущенное время
-  if (frameDelta > 0.05) frameDelta = 0.05;
-  accumulator += frameDelta;
-  if (gameContext.paramsClass != null && gameContext.paramsClass.gameInit) {
-    // ЗАЩИТА ОТ ЗАВИСАНИЯ
-    // Не даем циклу выполниться более 5 раз за кадр, даже если очень надо
-    let maxSteps = 5;
-    while (accumulator >= dt && maxSteps > 0) {
-      update(dt);
-      accumulator -= dt;
-      maxSteps--;
-    }
-
-    // Если после 5 шагов время всё еще осталось — сбрасываем его, 
-    // чтобы не накапливать "долг" на следующий кадр (избегаем "спирали смерти")
-    if (accumulator > dt) accumulator = 0;
-  }
-
-  render();
-});
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+// =========================================
+// ЗАПУСК ЧЕРЕЗ SDK MANAGER
+// Это код выполняется сразу при загрузке main.js
+// =========================================
+const sdkManager = new SdkManager(startGame);
+sdkManager.init();

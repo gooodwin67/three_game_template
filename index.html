@@ -3,7 +3,6 @@
 
 <head>
    <meta charset="utf-8">
-   <!-- <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1"> -->
    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
    <meta name="mobile-web-app-capable" content="yes">
    <title>Шаблон</title>
@@ -16,109 +15,11 @@
 
 
 
-   <!-- <script type="module">
-      import { startGame } from './main.js';
-
-      (function () {
-         function renderInitError(message) {
-            var container = document.body || document.documentElement;
-            if (!container) return;
-
-            var overlay = document.getElementById('debug-error-overlay');
-            if (!overlay) {
-               overlay = document.createElement('div');
-               overlay.id = 'debug-error-overlay';
-               overlay.className = 'debug_error_overlay';
-               container.appendChild(overlay);
-            }
-
-            overlay.textContent = message;
-         }
-
-         window.showInitError = function (error) {
-            var message = 'Init error';
-            if (error) {
-               if (error.message) message += ': ' + error.message;
-               else message += ': ' + String(error);
-            }
-
-            if (document.readyState === 'loading') {
-               document.addEventListener(
-                  'DOMContentLoaded',
-                  function () {
-                     renderInitError(message);
-                  },
-                  { once: true }
-               );
-            } else {
-               renderInitError(message);
-            }
-         };
-
-         window.addEventListener('error', function (event) {
-            if (!event) return;
-
-            var parts = [];
-
-            if (event.message) parts.push(event.message);
-            if (event.filename) parts.push('at ' + event.filename + ':' + event.lineno + ':' + event.colno);
-
-            if (event.error && event.error.stack) {
-               parts.push(event.error.stack);
-            }
-
-            window.showInitError(parts.join('\n'));
-         });
-
-         window.addEventListener('unhandledrejection', function (event) {
-            if (!event) return;
-
-            var reason = event.reason || 'unhandledrejection';
-            if (reason && reason.stack) {
-               window.showInitError(reason.stack);
-            } else {
-               window.showInitError(String(reason));
-            }
-         });
-
-
-
-
-         // Инициализация SDK + старт игры
-         window.initSDK = function () {
-            if (typeof YaGames !== 'undefined') {
-               YaGames.init()
-                  .then(function (ysdkInstance) {
-                     window.ysdk = ysdkInstance;
-                     startGame(ysdkInstance);
-                  })
-                  .catch(function (error) {
-                     window.showInitError(error);
-                  });
-            } else {
-               window.showInitError('YaGames is not defined');
-            }
-         };
-
-         // Гарантированно вызываем initSDK, когда страница и sdk.js уже загрузились
-         if (document.readyState === 'complete') {
-            // страница уже загружена
-            window.initSDK();
-         } else {
-            window.addEventListener('load', function () {
-               window.initSDK();
-            });
-         }
-      })();
-   </script> -->
-   <!-- ОДИН раз подключаем SDK, без onload -->
+   <!-- Подключение SDK Яндекс Игр (раскомментируйте перед билдом для продакшена) -->
    <!-- <script src="/sdk.js"></script> -->
-   <!-- <script src='/main.js'></script> -->
 
-   <script type="module">
-      import { startGame } from './main.js';
-      startGame(null);
-   </script>
+   <script type="module" src="./main.js"></script>
+
 
 
 </head>
