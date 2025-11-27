@@ -1,4 +1,6 @@
 import * as THREE from 'three';
+import GUI from 'three/addons/libs/lil-gui.module.min.js';
+
 import { SdkManager } from './yan.js';
 import { yanNeed } from "./functions.js"; // Проверьте пути!
 import { EventEmitter } from './events.js';
@@ -107,6 +109,12 @@ async function initFunctions() {
   await gameContext.physicsClass.initRapier();
   await gameContext.audioClass.loadAudio();
   await gameContext.controlClass.addKeyListeners();
+
+  if (location.hostname === 'localhost') { // Показываем только локально
+    const gui = new GUI();
+    const physicsFolder = gui.addFolder('Physics');
+    physicsFolder.add(gameContext.playerClass.options, 'speed', 0.1, 10);
+  }
 }
 
 

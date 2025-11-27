@@ -48,7 +48,7 @@ export class InstancesClass {
 
   }
 
-  this.physicsClass.updateInstancedTransforms();
+  this.physicsClass.update();
 
   this.instancesObjs.instances1.inst1.instanceMatrix.needsUpdate = true;
 

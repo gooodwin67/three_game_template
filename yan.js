@@ -22,6 +22,44 @@ export class SdkManager {
         }
     }
 
+    showFullscreenAdv() {
+        if (!this.ysdk) return;
+        this.ysdk.adv.showFullscreenAdv({
+            callbacks: {
+                onClose: function(wasShown) {
+                    // resume game logic
+                },
+                onError: function(error) {
+                    // resume game logic (fallback)
+                }
+            }
+        });
+    }
+    
+    showRewardedVideo(callbacks) {
+        if (!this.ysdk) return;
+        this.ysdk.adv.showRewardedVideo({
+            callbacks: {
+                onOpen: () => {
+                    // pause game audio/loop
+                    callbacks.onOpen && callbacks.onOpen();
+                },
+                onRewarded: () => {
+                    // give reward
+                    callbacks.onRewarded && callbacks.onRewarded();
+                },
+                onClose: () => {
+                    // resume game
+                    callbacks.onClose && callbacks.onClose();
+                },
+                onError: (e) => {
+                    console.error('Reward error:', e);
+                    callbacks.onError && callbacks.onError(e);
+                }
+            }
+        });
+    }
+
     /**
      * Внутренняя логика загрузки SDK
      */
