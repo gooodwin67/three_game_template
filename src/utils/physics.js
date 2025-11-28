@@ -4,7 +4,7 @@ import * as THREE from "three";
 const DEFAULTS = {
     gravity: { x: 0, y: -9.81, z: 0 },
     precision: {
-        maxVelocityIterations: 2, // Оптимизация: меньше проходов = быстрее (стандарт 4)
+        maxVelocityIterations: 4, // Оптимизация: меньше проходов = быстрее (2 для производительности)
         maxPositionIterations: 1, // Оптимизация: (стандарт 1)
     }
 };
@@ -22,7 +22,7 @@ export class PhysicsClass {
         // Используем Map для быстрого доступа, если понадобится удаление
         this.dynamicBodies = []; // [mesh, rigidBody, uuid]
         this.instancedBodies = []; // { mesh, index, size, body }
-        
+
         // Вспомогательные объекты для оптимизации (чтобы не создавать Vector3 каждый кадр)
         this._dummy = new THREE.Object3D();
         this._tmpVec3 = new THREE.Vector3();
@@ -31,15 +31,15 @@ export class PhysicsClass {
     /* =========================================
        1. INITIALIZATION
     ========================================= */
-    
+
     async initRapier() {
         if (!this.RAPIER) {
             this.RAPIER = await this._loadRapierModule();
         }
 
         const gravity = new this.RAPIER.Vector3(
-            DEFAULTS.gravity.x, 
-            DEFAULTS.gravity.y, 
+            DEFAULTS.gravity.x,
+            DEFAULTS.gravity.y,
             DEFAULTS.gravity.z
         );
 
@@ -50,7 +50,7 @@ export class PhysicsClass {
         this.world.maxPositionIterations = DEFAULTS.precision.maxPositionIterations;
 
         this.eventQueue = new this.RAPIER.EventQueue(true);
-        
+
         console.log("Physics: Rapier initialized");
     }
 
@@ -85,7 +85,7 @@ export class PhysicsClass {
     _syncDynamicBodies() {
         for (let i = 0, n = this.dynamicBodies.length; i < n; i++) {
             const [mesh, body] = this.dynamicBodies[i];
-            
+
             // Если объект удален из сцены, но остался в физике — пропускаем или удаляем (по желанию)
             if (!mesh) continue;
 
@@ -116,8 +116,8 @@ export class PhysicsClass {
             dummy.position.set(t.x, t.y, t.z);
             dummy.quaternion.set(r.x, r.y, r.z, r.w);
             dummy.scale.set(
-                size.x * invBase.x, 
-                size.y * invBase.y, 
+                size.x * invBase.x,
+                size.y * invBase.y,
                 size.z * invBase.z
             );
             dummy.updateMatrix();
@@ -152,7 +152,7 @@ export class PhysicsClass {
             this._createStaticBody(obj); // Или Kinematic, как у тебя было для ground
         } else {
             // Фолбек для остальных объектов
-            this._createGenericBody(obj); 
+            this._createGenericBody(obj);
         }
     }
 
@@ -160,7 +160,7 @@ export class PhysicsClass {
 
     _createPlayerBody(obj) {
         // Подготовка размеров
-        Helpers.prepareMeshTransform(obj); 
+        Helpers.prepareMeshTransform(obj);
         const size = Helpers.getMeshSizeIgnoringChildren(obj);
         Helpers.restoreMeshTransform(obj);
 
@@ -194,7 +194,7 @@ export class PhysicsClass {
     _createStaticBody(obj) {
         // Для земли используем KinematicPositionBased (если она движется) или Fixed (если стоит)
         // В твоем коде было KinematicPositionBased.
-        
+
         Helpers.prepareMeshTransform(obj);
         const size = Helpers.getMeshSizeIgnoringChildren(obj);
         Helpers.restoreMeshTransform(obj);
@@ -208,11 +208,11 @@ export class PhysicsClass {
         const colliderDesc = this.RAPIER.ColliderDesc.cuboid(size.x / 2, size.y / 2, size.z / 2)
             .setFriction(1.0)
             .setRestitution(0.0);
-        
+
         colliderDesc.setActiveEvents(this.RAPIER.ActiveEvents.COLLISION_EVENTS);
 
         const collider = this.world.createCollider(colliderDesc, body);
-        
+
         this._attachDataToMesh(obj, body, collider);
         // Добавляем в dynamicBodies, так как kinematic может двигаться (платформы)
         this.dynamicBodies.push([obj, body, obj.uuid]);
@@ -227,9 +227,9 @@ export class PhysicsClass {
         const bodyDesc = this.RAPIER.RigidBodyDesc.dynamic()
             .setTranslation(obj.position.x, obj.position.y, obj.position.z)
             .setRotation(obj.quaternion);
-        
+
         const body = this.world.createRigidBody(bodyDesc);
-        
+
         const colliderDesc = this.RAPIER.ColliderDesc.cuboid(size.x / 2, size.y / 2, size.z / 2);
         const collider = this.world.createCollider(colliderDesc, body);
 
@@ -269,16 +269,16 @@ export class PhysicsClass {
         } else {
             bodyDesc = this.RAPIER.RigidBodyDesc.kinematicPositionBased();
         }
-        
+
         bodyDesc.setTranslation(pos.x, pos.y, pos.z)
-                .setRotation({ x: rotQ.x, y: rotQ.y, z: rotQ.z, w: rotQ.w });
+            .setRotation({ x: rotQ.x, y: rotQ.y, z: rotQ.z, w: rotQ.w });
 
         const body = this.world.createRigidBody(bodyDesc);
 
         // 2. Collider Desc (По умолчанию шар для динамики, куб для статики - можно вынести в опции)
         let colliderDesc;
         if (type === 'dynamic') {
-             colliderDesc = this.RAPIER.ColliderDesc.ball(size.x / 2)
+            colliderDesc = this.RAPIER.ColliderDesc.ball(size.x / 2)
                 .setMass(1)
                 .setFriction(0.5)
                 .setRestitution(0.5);
@@ -332,15 +332,15 @@ class Helpers {
         if (obj.isMesh && obj.geometry) {
             const geom = obj.geometry;
             if (!geom.boundingBox) geom.computeBoundingBox();
-            
+
             const bb = geom.boundingBox;
             bb.getSize(this._tmpSize);
-            
+
             // Учитываем scale объекта
             this._tmpSize.multiply(obj.scale);
             return this._tmpSize.clone();
         }
-        
+
         // Фолбек для групп
         const box = new THREE.Box3().setFromObject(obj);
         return box.getSize(new THREE.Vector3());
@@ -349,19 +349,19 @@ class Helpers {
     // Кэш обратного размера базы для инстансов
     static ensureInvBase(mesh) {
         if (mesh.userData.invBase) return mesh.userData.invBase;
-        
+
         const geom = mesh.geometry;
         if (!geom.boundingBox) geom.computeBoundingBox();
-        
+
         const bbSize = new THREE.Vector3();
         geom.boundingBox.getSize(bbSize);
-        
+
         const inv = new THREE.Vector3(
-            1 / (bbSize.x || 1), 
-            1 / (bbSize.y || 1), 
+            1 / (bbSize.x || 1),
+            1 / (bbSize.y || 1),
             1 / (bbSize.z || 1)
         );
-        
+
         mesh.userData.invBase = inv;
         return inv;
     }

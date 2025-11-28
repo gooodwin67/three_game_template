@@ -1,4 +1,4 @@
-import { t } from './i18n.js';
+import { t } from '../utils/i18n.js';
 
 export class DataClass {
   constructor(gameContext) {

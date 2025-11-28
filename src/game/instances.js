@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import { getRandomNumber } from './functions';
+import { getRandomNumber } from '../utils/functions';
 
 export class InstancesClass {
  constructor(gameContext) {

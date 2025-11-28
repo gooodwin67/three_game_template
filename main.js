@@ -1,27 +1,28 @@
 import * as THREE from 'three';
 import GUI from 'three/addons/libs/lil-gui.module.min.js';
 
-import { SdkManager } from './yan.js';
-import { yanNeed } from "./functions.js"; // Проверьте пути!
-import { EventEmitter } from './events.js';
-import { InitClass } from './init.js'; // Лучше использовать относительные пути ./
-import { ParamsClass } from './params.js';
-import { PhysicsClass } from "./physics.js";
-import { AudioClass } from "./audio.js";
-import { ControlClass } from './control.js';
-import { DataClass } from './data.js';
-import { AssetsManager } from './assets-manager.js';
-import { ScreenManager } from './screen-manager.js';
-import { initI18n } from './i18n.js';
-import { GameClass } from './game.js';
-import { WorldClass } from './world.js';
-import { PlayerClass } from './player.js';
-import { InstancesClass } from './instances.js';
+import { SdkManager } from './src/utils/yan';
+import { yanNeed } from "./src/utils/functions";
+import { EventEmitter } from './src/utils/events';
+import { InitClass } from './src/main/init';
+import { ParamsClass } from './src/game/params';
+import { PhysicsClass } from "./src/utils/physics";
+import { AudioClass } from "./src/assets/audio";
+import { ControlClass } from './src/utils/control';
+import { DataClass } from './src/main/data';
+import { AssetsManager } from './src/assets/assets-manager';
+import { ScreenManager } from './src/main/screen-manager';
+import { initI18n } from './src/utils/i18n';
+import { GameClass } from './src/game/game';
+import { WorldClass } from './src/game/world';
+import { PlayerClass } from './src/game/player';
+import { InstancesClass } from './src/game/instances';
 
 console.clear();
 
 const gameContext = {};
-const clock = new THREE.Clock(); // Часы инициализируем здесь
+gameContext.clock = new THREE.Clock();
+
 
 /* =========================================
    ENTRY POINT (Точка входа)
@@ -47,16 +48,16 @@ export async function startGame(ysdkInstance) {
 ========================================= */
 async function BeforeStart() {
   const loaderLine = document.querySelector('.loader_line');
-  if(loaderLine) loaderLine.style.width = "30%";
+  if (loaderLine) loaderLine.style.width = "30%";
 
   await initClases();
   await initFunctions();
 
-  if(loaderLine) loaderLine.style.width = "100%";
+  if (loaderLine) loaderLine.style.width = "100%";
 
   gameContext.paramsClass.gameInit = true;
   gameContext.ui.show('main_screen');
-  
+
   // Подписываемся на старт матча
   gameContext.events.on('start_match', () => startMatch());
 
@@ -77,7 +78,7 @@ async function startMatch() {
    INIT CLASSES
 ========================================= */
 async function initClases() {
-  gameContext.initClass = new InitClass(gameContext); 
+  gameContext.initClass = new InitClass(gameContext);
   gameContext.events = new EventEmitter();
 
   gameContext.scene = gameContext.initClass.scene;
@@ -101,7 +102,7 @@ async function initClases() {
    INIT FUNCTIONS
 ========================================= */
 async function initFunctions() {
-  if(typeof yanNeed === 'function') await yanNeed();
+  if (typeof yanNeed === 'function') await yanNeed();
   gameContext.paramsClass.initCustomScroll();
   initI18n('ru');
 
@@ -136,32 +137,32 @@ function render() {
   if (gameContext.initClass && gameContext.initClass.stats) {
     gameContext.initClass.stats.update();
   }
-  
+
   if (gameContext.renderer && gameContext.scene && gameContext.camera) {
     gameContext.renderer.render(gameContext.scene, gameContext.camera);
   }
 }
 
 function startAnimationLoop() {
-    let accumulator = 0;
-    const dt = 1 / 60;
-    const maxFrame = 0.1;
-  
-    gameContext.renderer.setAnimationLoop(() => {
-      let frameDelta = clock.getDelta();
-      if (frameDelta > maxFrame) frameDelta = maxFrame;
-      accumulator += frameDelta;
-      
-      let maxSteps = 5;
-      while (accumulator >= dt && maxSteps > 0) {
-        update(dt);
-        accumulator -= dt;
-        maxSteps--;
-      }
-  
-      if (accumulator > dt) accumulator = 0;
-      render();
-    });
+  let accumulator = 0;
+  const dt = 1 / 60;
+  const maxFrame = 0.1;
+
+  gameContext.renderer.setAnimationLoop(() => {
+    let frameDelta = gameContext.clock.getDelta();
+    if (frameDelta > maxFrame) frameDelta = maxFrame;
+    accumulator += frameDelta;
+
+    let maxSteps = 5;
+    while (accumulator >= dt && maxSteps > 0) {
+      update(dt);
+      accumulator -= dt;
+      maxSteps--;
+    }
+
+    if (accumulator > dt) accumulator = 0;
+    render();
+  });
 }
 
 // =========================================

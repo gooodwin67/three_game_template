@@ -45,23 +45,33 @@ export class PlayerClass {
     this.events.on('player_backward', (e) => this.move.backward = e);
   }
 
+
   update(delta) {
 
-    if (!this.playerBody) return;
-
-    const velocity = this.playerBody.linvel();
     const speed = this.options.speed;
+    const body = this.playerBody;
+    const velocity = this.playerBody.linvel();
 
-    velocity.x = 0;
-    velocity.z = 0;
+    let moveX = 0;
+    let moveZ = 0;
 
-    // const moveDistance = this.options.speed * delta;
-    if (this.move.forward) velocity.z -= speed;
-    if (this.move.backward) velocity.z += speed;
-    if (this.move.left) velocity.x -= speed;
-    if (this.move.right) velocity.x += speed;
+    if (this.move.forward) moveZ -= 1;
+    if (this.move.backward) moveZ += 1;
+    if (this.move.left) moveX -= 1;
+    if (this.move.right) moveX += 1;
 
-    this.playerBody.setLinvel(velocity);
+    // нормализация (если движение по диагонали)
+    const length = Math.sqrt(moveX * moveX + moveZ * moveZ); //Math.hypot(moveX, moveZ);
+    if (length > 0) {
+      moveX /= length;
+      moveZ /= length;
+    }
+
+    velocity.x = moveX * speed;
+    velocity.z = moveZ * speed;
+
+
+    body.setLinvel(velocity);
   }
 
 
